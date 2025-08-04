@@ -6,11 +6,11 @@ const timerElement = document.getElementById("timer");
 
 let startTime, endTime, totalTimeTaken, sentence_to_write;
 
-const sentences = [
-  "The quick brown fox jumps over the lazy dog 1",
-  "The quick brown fox jumps over the lazy dog 2",
-  "The quick brown fox jumps over the lazy dog 3",
-];
+// const sentences = [
+//   "The quick brown fox jumps over the lazy dog 1",
+//   "The quick brown fox jumps over the lazy dog 2",
+//   "The quick brown fox jumps over the lazy dog 3",
+// ];
 
 const errorChecking = (words) => {
   let num = 0;
@@ -18,7 +18,7 @@ const errorChecking = (words) => {
   sentence_to_write = sentence_to_write.trim().split(" ");
 
   for (let i = 0; i < words.length; i++) {
-    if (words[i] === sentence_to_write[i]) {
+    if (words[i].toLowerCase() === sentence_to_write[i].toLowerCase()) {
       num++;
     }
   }
@@ -41,7 +41,7 @@ const calculateTypingSpeed = (totalTimeTaken) => {
 };
 
 let timerInterval,
-  timeLeft = 10;
+  timeLeft = 30;
 
 const endTypingTest = () => {
   clearInterval(timerInterval);
@@ -53,39 +53,53 @@ const endTypingTest = () => {
   totalTimeTaken = (endTime - startTime) / 1000;
   // console.log(totalTimeTaken)
 
-  calculateTypingSpeed(totalTimeTaken);
+  calculateTypingSpeed(Math.floor(totalTimeTaken));
 
   show_sentence.innerHTML = "";
   typing_ground.value = "";
 };
 
-const startTyping = () => {
-  let randomNumber = Math.floor(Math.random() * sentences.length);
-  // console.log(randomNumber)
-  show_sentence.innerHTML = sentences[randomNumber];
+const startTyping = async () => {
+  show_sentence.innerHTML = "Loading...";
 
-  typing_ground.value = "";
-  typing_ground.focus();
+  try {
+    const response = await fetch("https://api.api-ninjas.com/v1/quotes", {
+      method: "GET",
+      headers: { "X-Api-Key": "iMEr8dFmJrIp7LZJb3Gvag==tdVTctho9HuKKOJM" },
+    });
+    const data = await response.json();
+    // console.log(data[0].quote)
+    const sentence = data[0].quote;
+    // let randomNumber = Math.floor(Math.random() * sentences.length);
+    // console.log(randomNumber)
+    show_sentence.innerHTML = sentence;
 
-  let date = new Date();
-  startTime = date.getTime();
-  btn.innerText = "Done";
+    typing_ground.value = "";
+    typing_ground.focus();
 
-  timeLeft = 10;
-  timerElement.textContent = timeLeft;
+    let date = new Date();
+    startTime = date.getTime();
+    btn.innerText = "Done";
 
-  clearInterval(timerInterval);
-
-  timerInterval = setInterval(() => {
-    timeLeft--;
+    timeLeft = 30;
     timerElement.textContent = timeLeft;
 
-    if (timeLeft === 0) {
-      clearInterval(timerInterval);
-      typing_ground.setAttribute("disabled", "true");
-      endTypingTest();
-    }
-  }, 1000);
+    clearInterval(timerInterval);
+
+    timerInterval = setInterval(() => {
+      timeLeft--;
+      timerElement.textContent = timeLeft;
+
+      if (timeLeft === 0) {
+        clearInterval(timerInterval);
+        typing_ground.setAttribute("disabled", "true");
+        endTypingTest();
+      }
+    }, 1000);
+  } catch (error) {
+    show_sentence.innerHTML = "Failed to load quote. Please try again.";
+    console.error("Error fetching quote:", error);
+  }
 };
 
 btn.addEventListener("click", () => {
